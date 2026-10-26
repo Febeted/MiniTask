@@ -66,6 +66,9 @@ internal class Program
     private static void ShowTasks()
     {
         var tasks = Service.GetTasks();
+        
+        Console.WriteLine();
+        Console.WriteLine("=== Lista zadań ===");
 
         if (tasks.Count == 0)
         {
