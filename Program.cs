@@ -17,6 +17,7 @@ internal class Program
             Console.WriteLine("2. Pokaż zadania");
             Console.WriteLine("3. Zakończ zadanie");
             Console.WriteLine("4. Usuń zadanie");
+            Console.WriteLine("5. Edytuj zadanie");
             Console.WriteLine("0. Wyjście");
             Console.Write("Wybierz opcję: ");
 
@@ -40,6 +41,10 @@ internal class Program
                     RemoveTask();
                     break;
 
+                case "5":
+                    EditTask();
+                    break;
+
                 case "0":
                     running = false;
                     break;
@@ -50,6 +55,8 @@ internal class Program
             }
         }
     }
+
+
 
     private static void AddTask()
     {
@@ -91,15 +98,12 @@ internal class Program
 
     private static void CompleteTask()
     {
-        Console.Write("Numer zadania: ");
+        int? id = ReadTaskId("Podaj numer zadania do zakończenia: ");
 
-        if (!int.TryParse(Console.ReadLine(), out int id))
-        {
-            Console.WriteLine("Nieprawidłowy numer.");
+        if (id is null)
             return;
-        }
 
-        bool success = Service.CompleteTask(id);
+        bool success = Service.CompleteTask(id.Value);
 
         Console.WriteLine(success
             ? "Zadanie zakończone."
@@ -109,19 +113,54 @@ internal class Program
 
     private static void RemoveTask()
     {
-        Console.Write("Podaj numer zadania do usunięcia: ");
+        int? id = ReadTaskId("Podaj numer zadania do usunięcia: ");
 
-        if (!int.TryParse(Console.ReadLine(), out int id))
-        {
-            Console.WriteLine("Nieprawidłowy numer.");
+        if (id is null)
             return;
-        }
 
-        bool removed = Service.RemoveTask(id);
+        bool removed = Service.RemoveTask(id.Value);
 
         Console.WriteLine(removed
             ? "Zadanie zostało usunięte."
             : "Nie znaleziono zadania.");
     }
+
+    private static void EditTask()
+    {
+        int? id = ReadTaskId("Podaj numer zadania do zmiany: ");
+
+        if (id is null)
+            return;
+
+        Console.Write("Podaj nowy tytuł: ");
+        string title = Console.ReadLine() ?? "";
+
+        try
+        {
+            bool edited = Service.UpdateTask(id.Value, title);
+
+            Console.WriteLine(edited
+                ? "Tytuł zadania został zmieniony."
+                : "Nie znaleziono zadania.");
+        }
+        catch (ArgumentException ex)
+        {
+            Console.WriteLine(ex.Message);
+        }        
+    }
+
+    private static int? ReadTaskId(string message)
+    {
+        Console.Write(message);
+
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Nieprawidłowy numer.");
+            return null;
+        }
+
+        return id;
+    }
+
 
 }
