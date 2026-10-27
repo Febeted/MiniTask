@@ -16,6 +16,7 @@ internal class Program
             Console.WriteLine("1. Dodaj zadanie");
             Console.WriteLine("2. Pokaż zadania");
             Console.WriteLine("3. Zakończ zadanie");
+            Console.WriteLine("4. Usuń zadanie");
             Console.WriteLine("0. Wyjście");
             Console.Write("Wybierz opcję: ");
 
@@ -33,6 +34,10 @@ internal class Program
 
                 case "3":
                     CompleteTask();
+                    break;
+
+                case "4":
+                    RemoveTask();
                     break;
 
                 case "0":
@@ -100,4 +105,23 @@ internal class Program
             ? "Zadanie zakończone."
             : "Nie znaleziono zadania.");
     }
+
+
+    private static void RemoveTask()
+    {
+        Console.Write("Podaj numer zadania do usunięcia: ");
+
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Nieprawidłowy numer.");
+            return;
+        }
+
+        bool removed = Service.RemoveTask(id);
+
+        Console.WriteLine(removed
+            ? "Zadanie zostało usunięte."
+            : "Nie znaleziono zadania.");
+    }
+
 }

@@ -38,4 +38,17 @@ public class TaskService
         task.IsCompleted = true;
         return true;
     }
+
+
+    public bool RemoveTask(int id)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == id);
+
+        if (task is null)
+            return false;
+
+        _tasks.Remove(task);
+        return true;
+    }
+
 }
