@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MiniTask.csproj" />
+  <Project Path="MiniTask.Tests/MiniTask.Tests.csproj" />
+</Solution>
