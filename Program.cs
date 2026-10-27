@@ -1,4 +1,5 @@
 ﻿using MiniTask.Services;
+using MiniTask.Models;
 
 namespace MiniTask;
 
@@ -18,6 +19,8 @@ internal class Program
             Console.WriteLine("3. Zakończ zadanie");
             Console.WriteLine("4. Usuń zadanie");
             Console.WriteLine("5. Edytuj zadanie");
+            Console.WriteLine("6. Pokaż aktywne zadania");
+            Console.WriteLine("7. Pokaż zakończone zadania");
             Console.WriteLine("0. Wyjście");
             Console.Write("Wybierz opcję: ");
 
@@ -30,7 +33,9 @@ internal class Program
                     break;
 
                 case "2":
-                    ShowTasks();
+                    ShowTasks(
+                        Service.GetTasks(),
+                        "Wszystkie zadania");
                     break;
 
                 case "3":
@@ -43,6 +48,18 @@ internal class Program
 
                 case "5":
                     EditTask();
+                    break;
+
+                case "6":
+                    ShowTasks(
+                        Service.GetActiveTasks(),
+                        "Aktywne zadania");
+                    break;
+
+                case "7":
+                    ShowTasks(
+                        Service.GetCompletedTasks(),
+                        "Zakończone zadania");
                     break;
 
                 case "0":
@@ -75,12 +92,10 @@ internal class Program
         }
     }
 
-    private static void ShowTasks()
+    private static void ShowTasks(IReadOnlyList<TaskItem> tasks, string heading)
     {
-        var tasks = Service.GetTasks();
-        
         Console.WriteLine();
-        Console.WriteLine("=== Lista zadań ===");
+        Console.WriteLine($"=== {heading} ===");
 
         if (tasks.Count == 0)
         {
@@ -91,6 +106,7 @@ internal class Program
         foreach (var task in tasks)
         {
             string status = task.IsCompleted ? "[x]" : "[ ]";
+
             Console.WriteLine(
                 $"{task.Id}. {status} {task.Title}");
         }

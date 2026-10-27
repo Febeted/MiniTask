@@ -51,4 +51,35 @@ public class TaskService
         return true;
     }
 
+
+    public bool UpdateTask(int id, string newTitle)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == id);
+
+        if (task is null)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(newTitle))
+            throw new ArgumentException(
+                "Tytuł zadania nie może być pusty.");
+
+        task.Title = newTitle.Trim();
+        return true;
+    }
+
+    public IReadOnlyList<TaskItem> GetActiveTasks()
+    {
+        return _tasks
+            .Where(task => !task.IsCompleted)
+            .ToList();
+    }
+
+    public IReadOnlyList<TaskItem> GetCompletedTasks()
+    {
+        return _tasks
+            .Where(task => task.IsCompleted)
+            .ToList();
+    }
+
+
 }
