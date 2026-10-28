@@ -81,5 +81,14 @@ public class TaskService
             .ToList();
     }
 
+    public void LoadTasks(IEnumerable<TaskItem> tasks)
+    {
+        _tasks.Clear();
+        _tasks.AddRange(tasks);
+
+        _nextId = _tasks.Count > 0
+            ? _tasks.Max(t => t.Id) + 1
+            : 1;
+    }
 
 }

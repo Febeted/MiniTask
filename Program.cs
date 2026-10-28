@@ -1,5 +1,7 @@
 ﻿using MiniTask.Services;
 using MiniTask.Models;
+using MiniTask.Repositories;
+using System.Text;
 
 namespace MiniTask;
 
@@ -7,8 +9,23 @@ internal class Program
 {
     private static readonly TaskService Service = new();
 
+    private static readonly JsonTaskRepository Repository = new(
+        Path.Combine(AppContext.BaseDirectory, "tasks.json")
+    );
+
+
     private static void Main(string[] args)
     {
+        // UTF-16 rozwiązuje problem odczytu
+        // polskich znaków w używanym CMD.
+        Console.InputEncoding = System.Text.Encoding.Unicode;
+        Console.OutputEncoding = System.Text.Encoding.Unicode;
+
+        Service.LoadTasks(Repository.Load());
+
+        Console.WriteLine(
+            $"Wczytano {Service.GetTasks().Count} zadań.");
+
         bool running = true;
 
         while (running)
@@ -83,6 +100,9 @@ internal class Program
         try
         {
             var task = Service.AddTask(title);
+
+            SaveTasks();
+
             Console.WriteLine(
                 $"Dodano zadanie nr {task.Id}.");
         }
@@ -121,6 +141,9 @@ internal class Program
 
         bool success = Service.CompleteTask(id.Value);
 
+        if (success)
+            SaveTasks();
+
         Console.WriteLine(success
             ? "Zadanie zakończone."
             : "Nie znaleziono zadania.");
@@ -135,6 +158,9 @@ internal class Program
             return;
 
         bool removed = Service.RemoveTask(id.Value);
+
+        if (removed)
+            SaveTasks();
 
         Console.WriteLine(removed
             ? "Zadanie zostało usunięte."
@@ -154,6 +180,9 @@ internal class Program
         try
         {
             bool edited = Service.UpdateTask(id.Value, title);
+
+            if (edited)
+                SaveTasks();
 
             Console.WriteLine(edited
                 ? "Tytuł zadania został zmieniony."
@@ -178,5 +207,9 @@ internal class Program
         return id;
     }
 
+    private static void SaveTasks()
+    {
+        Repository.Save(Service.GetTasks());
+    }
 
 }
