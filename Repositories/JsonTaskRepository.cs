@@ -22,7 +22,22 @@ public class JsonTaskRepository
 
         string json = JsonSerializer.Serialize(tasks, options);
 
-        File.WriteAllText(_filePath, json);
+        string tempPath = _filePath + ".tmp";
+
+        try
+        {
+            // 1. Zapis do pliku tymczasowego
+            File.WriteAllText(tempPath, json);
+
+            // 2. Podmiana pliku docelowego
+            File.Move(tempPath, _filePath, overwrite: true);
+        }
+        finally
+        {
+            // 3. Usunięcie pozostałości po nieudanym zapisie
+            if (File.Exists(tempPath))
+                File.Delete(tempPath);
+        }
     }
 
     public List<TaskItem> Load()
