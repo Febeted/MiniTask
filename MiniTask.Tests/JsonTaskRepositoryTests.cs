@@ -1,6 +1,7 @@
 ﻿
 using MiniTask.Models;
 using MiniTask.Repositories;
+using System.Text.Json;
 
 namespace MiniTask.Tests;
 
@@ -74,6 +75,97 @@ public class JsonTaskRepositoryTests
             var tasks = repository.Load();
 
             Assert.Empty(tasks);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Load_WhenJsonIsInvalid_ThrowsJsonException()
+    {
+        // Arrange
+        string path = Path.Combine(
+            Path.GetTempPath(),
+            $"{Guid.NewGuid()}.json");
+
+        try
+        {
+            File.WriteAllText(path, "{ invalid json }");
+
+            var repository = new JsonTaskRepository(path);
+
+            // Act & Assert
+            Assert.Throws<JsonException>(() => repository.Load());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Save_AfterSuccessfulSave_DoesNotLeaveTempFile()
+    {
+        // Arrange
+        string path = Path.Combine(
+            Path.GetTempPath(),
+            $"{Guid.NewGuid()}.json");
+
+        string tempPath = path + ".tmp";
+
+        try
+        {
+            var repository = new JsonTaskRepository(path);
+
+            var tasks = new List<TaskItem>
+            {
+                new TaskItem
+                {
+                    Id = 1,
+                    Title = "Nauczyć się obsługi plików",
+                    IsCompleted = false
+                }
+            };
+
+            // Act
+            repository.Save(tasks);
+
+            // Assert
+            Assert.True(File.Exists(path));
+            Assert.False(File.Exists(tempPath));
+        }
+        finally
+        {
+            File.Delete(path);
+            File.Delete(tempPath);
+        }
+    }
+
+    [Fact]
+    public void Load_WhenJsonIsInvalid_DoesNotModifyFile()
+    {
+        // Arrange
+        string path = Path.Combine(
+            Path.GetTempPath(),
+            $"{Guid.NewGuid()}.json");
+
+        string invalidJson = "{ invalid json }";
+
+        try
+        {
+            File.WriteAllText(path, invalidJson);
+
+            var repository = new JsonTaskRepository(path);
+
+            // Act
+            Assert.Throws<JsonException>(() => repository.Load());
+
+            // Assert
+            string contentAfterLoad = File.ReadAllText(path);
+
+            Assert.Equal(invalidJson, contentAfterLoad);
         }
         finally
         {

@@ -1,7 +1,7 @@
 ﻿using MiniTask.Services;
 using MiniTask.Models;
 using MiniTask.Repositories;
-using System.Text;
+using System.Text.Json;
 
 namespace MiniTask;
 
@@ -21,10 +21,38 @@ internal class Program
         Console.InputEncoding = System.Text.Encoding.Unicode;
         Console.OutputEncoding = System.Text.Encoding.Unicode;
 
-        Service.LoadTasks(Repository.Load());
+        try
+        {
+            Service.LoadTasks(Repository.Load());
 
-        Console.WriteLine(
-            $"Wczytano {Service.GetTasks().Count} zadań.");
+            Console.WriteLine(
+                $"Wczytano {Service.GetTasks().Count} zadań.");
+        }
+        catch (JsonException)
+        {
+            Console.WriteLine();
+            Console.WriteLine("BŁĄD ODCZYTU DANYCH");
+            Console.WriteLine("Plik JSON jest uszkodzony lub ma nieprawidłowy format.");
+            Console.WriteLine("Program zakończy działanie, aby nie nadpisać danych.");
+
+            return;
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine();
+            Console.WriteLine("BŁĄD ODCZYTU PLIKU");
+            Console.WriteLine($"Szczegóły: {ex.Message}");
+
+            return;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine();
+            Console.WriteLine("BRAK DOSTĘPU DO PLIKU");
+            Console.WriteLine($"Szczegóły: {ex.Message}");
+
+            return;
+        }
 
         bool running = true;
 
@@ -101,10 +129,16 @@ internal class Program
         {
             var task = Service.AddTask(title);
 
-            SaveTasks();
-
-            Console.WriteLine(
-                $"Dodano zadanie nr {task.Id}.");
+            if (SaveTasks())
+            {
+                Console.WriteLine(
+                    $"Dodano zadanie nr {task.Id}.");
+            }
+            else
+            {
+                Console.WriteLine(
+                    "Zadanie dodano do pamięci, ale NIE zostało zapisane na dysku.");
+            }
         }
         catch (ArgumentException ex)
         {
@@ -141,12 +175,16 @@ internal class Program
 
         bool success = Service.CompleteTask(id.Value);
 
-        if (success)
-            SaveTasks();
+        if (!success)
+        {
+            Console.WriteLine("Nie znaleziono zadania.");
+            return;
+        }
 
-        Console.WriteLine(success
-            ? "Zadanie zakończone."
-            : "Nie znaleziono zadania.");
+        if (SaveTasks())
+            Console.WriteLine("Zadanie zakończone i zapisane.");
+        else
+            Console.WriteLine("Zadanie zakończono tylko w pamięci.");
     }
 
 
@@ -159,12 +197,16 @@ internal class Program
 
         bool removed = Service.RemoveTask(id.Value);
 
-        if (removed)
-            SaveTasks();
+        if (!removed)
+        {
+            Console.WriteLine("Nie znaleziono zadania.");
+            return;
+        }
 
-        Console.WriteLine(removed
-            ? "Zadanie zostało usunięte."
-            : "Nie znaleziono zadania.");
+        if (SaveTasks())
+            Console.WriteLine("Zadanie usunięto i zapisano.");
+        else
+            Console.WriteLine("Zadanie usunięto tylko w pamięci.");
     }
 
     private static void EditTask()
@@ -181,12 +223,16 @@ internal class Program
         {
             bool edited = Service.UpdateTask(id.Value, title);
 
-            if (edited)
-                SaveTasks();
+            if (!edited)
+            {
+                Console.WriteLine("Nie znaleziono zadania.");
+                return;
+            }
 
-            Console.WriteLine(edited
-                ? "Tytuł zadania został zmieniony."
-                : "Nie znaleziono zadania.");
+            if (SaveTasks())
+                Console.WriteLine("Tytuł zadania zmieniono i zapisano.");
+            else
+                Console.WriteLine("Tytuł zmieniono tylko w pamięci.");
         }
         catch (ArgumentException ex)
         {
@@ -207,9 +253,27 @@ internal class Program
         return id;
     }
 
-    private static void SaveTasks()
+    private static bool SaveTasks()
     {
-        Repository.Save(Service.GetTasks());
+        try
+        {
+            Repository.Save(Service.GetTasks());
+            return true;
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine();
+            Console.WriteLine("BŁĄD ZAPISU DANYCH");
+            Console.WriteLine($"Szczegóły: {ex.Message}");
+            return false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine();
+            Console.WriteLine("BRAK UPRAWNIEŃ DO ZAPISU");
+            Console.WriteLine($"Szczegóły: {ex.Message}");
+            return false;
+        }
     }
 
 }
