@@ -1,6 +1,7 @@
-﻿using MiniTask.Services;
+﻿using MiniTask.Infrastructure;
 using MiniTask.Models;
 using MiniTask.Repositories;
+using MiniTask.Services;
 using System.Text.Json;
 
 namespace MiniTask;
@@ -9,8 +10,10 @@ internal class Program
 {
     private static readonly TaskService Service = new();
 
+    private static readonly AppDataPaths AppPaths = new("tasks.json");
+
     private static readonly JsonTaskRepository Repository = new(
-        Path.Combine(AppContext.BaseDirectory, "tasks.json")
+        AppPaths.TasksFilePath
     );
 
 
